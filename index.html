@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Páginaz - Crea tu mini web</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+ .block { border: 2px dashed transparent; }
+ .block:hover { border-color: #cbd5e1; }
+ .editing { outline: 2px solid #3b82f6; }
+</style>
+</head>
+<body class="bg-slate-50">
+<div id="app" class="max-w-md mx-auto min-h-screen bg-white shadow-xl">
+  
+  <!-- Barra superior -->
+  <div class="bg-slate-900 text-white p-3 flex justify-between items-center sticky top-0 z-10">
+    <h1 class="font-bold">Páginaz</h1>
+    <button onclick="toggleMode()" id="modeBtn" class="bg-blue-500 px-3 py-1 rounded text-sm">
+      Vista previa
+    </button>
+  </div>
+
+  <!-- Editor -->
+  <div id="editor" class="p-3 bg-slate-100 border-b">
+    <p class="text-xs text-slate-600 mb-2">Agrega bloques:</p>
+    <div class="grid grid-cols-3 gap-2">
+      <button onclick="addBlock('titulo')" class="bg-white p-2 rounded text-xs border">+ Título</button>
+      <button onclick="addBlock('texto')" class="bg-white p-2 rounded text-xs border">+ Texto</button>
+      <button onclick="addBlock('boton')" class="bg-white p-2 rounded text-xs border">+ Botón</button>
+      <button onclick="addBlock('imagen')" class="bg-white p-2 rounded text-xs border">+ Imagen</button>
+      <button onclick="addBlock('whatsapp')" class="bg-white p-2 rounded text-xs border">+ WhatsApp</button>
+      <button onclick="deleteBlock()" class="bg-red-100 text-red-700 p-2 rounded text-xs border">Borrar</button>
+    </div>
+  </div>
+
+  <!-- Página del usuario -->
+  <div id="page" class="p-6 space-y-4 min-h-[70vh]"></div>
+
+  <!-- Footer -->
+  <div class="text-center text-xs text-slate-400 p-4">
+    Hecho con Páginaz
+  </div>
+
+</div>
+
+<script>
+let blocks = [];
+let selectedBlock = null;
+let editMode = true;
+
+function renderPage() {
+  const page = document.getElementById('page');
+  page.innerHTML = '';
+  
+  if(blocks.length === 0 && editMode) {
+    page.innerHTML = '<p class="text-slate-400 text-center mt-20">Agrega tu primer bloque arriba 👆</p>';
+  }
+
+  blocks.forEach((block, i) => {
+    const div = document.createElement('div');
+    div.className = `block rounded ${selectedBlock === i && editMode? 'editing' : ''}`;
+    div.onclick = () => editMode && selectBlock(i);
+    
+    if(block.tipo === 'titulo') {
+      div.innerHTML = `<h1 contenteditable="${editMode}" onblur="updateBlock(${i}, this.innerText)" class="text-3xl font-bold">${block.contenido}</h1>`;
+    }
+    if(block.tipo === 'texto') {
+      div.innerHTML = `<p contenteditable="${editMode}" onblur="updateBlock(${i}, this.innerText)" class="text-slate-700">${block.contenido}</p>`;
+    }
+    if(block.tipo === 'boton') {
+      div.innerHTML = `<a href="${block.link}" target="_blank" class="block w-full bg-blue-500 text-white text-center py-3 rounded-lg font-semibold">${block.contenido}</a>`;
+      if(editMode) div.innerHTML += `<input type="text" value="${block.link}" onblur="updateLink(${i}, this.value)" class="w-full text-xs mt-1 p-1 border rounded" placeholder="https://...">`;
+    }
+    if(block.tipo === 'imagen') {
+      div.innerHTML = `<img src="${block.contenido}" class="w-full rounded-lg">`;
+      if(editMode) div.innerHTML += `<input type="text" value="${block.contenido}" onblur="updateBlock(${i}, this.value)" class="w-full text-xs mt-1 p-1 border rounded" placeholder="URL de imagen">`;
+    }
+    if(block.tipo === 'whatsapp') {
+      const url = `https://wa.me/${block.contenido}?text=Hola`;
+      div.innerHTML = `<a href="${url}" target="_blank" class="block w-full bg-green-500 text-white text-center py-3 rounded-lg font-semibold">WhatsApp: ${block.contenido}</a>`;
+      if(editMode) div.innerHTML += `<input type="text" value="${block.contenido}" onblur="updateBlock(${i}, this.value)" class="w-full text-xs mt-1 p-1 border rounded" placeholder="5281...">`;
+    }
+    page.appendChild(div);
+  });
+}
+
+function addBlock(tipo) {
+  const defaults = {
+    titulo: 'Tu Nombre Aquí',
+    texto: 'Escribe algo sobre ti...',
+    boton: {contenido: 'Mi Instagram', link: 'https://instagram.com'},
+    imagen: 'https://via.placeholder.com/400x300',
+    whatsapp: '528100000000'
+  };
+  let nuevo = {tipo};
+  if(tipo === 'boton') nuevo = {...nuevo,...defaults[tipo]};
+  else nuevo.contenido = defaults[tipo];
+  
+  blocks.push(nuevo);
+  renderPage();
+}
+
+function selectBlock(i) { selectedBlock = i; renderPage(); }
+function updateBlock(i, val) { blocks[i].contenido = val; }
+function updateLink(i, val) { blocks[i].link = val; }
+function deleteBlock() { 
+  if(selectedBlock!== null) { blocks.splice(selectedBlock, 1); selectedBlock = null; renderPage(); }
+}
+
+function toggleMode() {
+  editMode =!editMode;
+  document.getElementById('editor').style.display = editMode? 'block' : 'none';
+  document.getElementById('modeBtn').innerText = editMode? 'Vista previa' : 'Editar';
+  selectedBlock = null;
+  renderPage();
+}
+
+// Ejemplo inicial
+addBlock('titulo');
+blocks[0].contenido = 'Ana López';
+addBlock('texto');
+blocks[1].contenido = 'Fotógrafa en Monterrey. Sesiones de retrato y eventos.';
+addBlock('whatsapp');
+renderPage();
+</script>
+</body>
+</html>
